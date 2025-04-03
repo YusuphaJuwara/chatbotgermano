@@ -23,9 +23,9 @@
         <p class="text-muted">Ask me anything!</p>
 
         <div class="chat-container">
-            <div id="chatbox" class="chatbox">
+            <!--div id="chatbox" class="chatbox">
                 <p class="bot">🤖 Hi! I'm Germano. How can I help?</p>
-            </div>
+            </div-->
             <div class="chat-input">
                 <input type="text" id="userInput" class="form-control" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
                 <button onclick="sendMessage()" class="btn btn-primary ms-2">Send</button>
@@ -39,11 +39,19 @@
     <script>
         const responses = {
             "hello": "Hello! How can I assist you today?",
-            "pricing": "Our AI chatbot is available with flexible pricing. Do you need details?",
+            "pricing": "Our AI chatbot offers flexible plans. Are you a student or a company? I can suggest the best fit. User input: student plan, yes Bot: If you're a student, we offer three plans: • Free: 10 questions every 4h • Standard: 50 questions every 4h • Full: 100 questions every 4h",
+			"cost": "Our AI chatbot offers flexible plans. Are you a student or a company? I can suggest the best fit. User input: student plan, yes Bot: If you're a student, we offer three plans: • Free: 10 questions every 4h • Standard: 50 questions every 4h • Full: 100 questions every 4h",
+			"how much": "Our AI chatbot offers flexible plans. Are you a student or a company? I can suggest the best fit. User input: student plan, yes Bot: If you're a student, we offer three plans: • Free: 10 questions every 4h • Standard: 50 questions every 4h • Full: 100 questions every 4h",
             "support": "Germano can resolve 80% of customer queries instantly. Try asking about features!",
             "default": "I'm still learning! Could you rephrase that?",
-			"passwor reser": "To reset you password click on 'I forgot my credential' and follow the instruction",
-			"yes": "If you are a student we got a three plan to use chatbot, free(10 question every 4h), standard (50 question every 4h), full (100 question every 4h)"
+			"password reset": "To reset your password, click on ‘Forgot password?’ on the login page and follow the instructions.",
+			"forgot password": "To reset your password, click on ‘Forgot password?’ on the login page and follow the instructions.",
+			"hello": "Hello! How can I assist you today?",
+			"hi": "Hello! How can I assist you today?",
+			"hey": "Hello! How can I assist you today?",
+			"demo": "Want to see how Germano would answer your real customer questions? Send us one and we’ll reply manually for now!"
+			"try": "Want to see how Germano would answer your real customer questions? Send us one and we’ll reply manually for now!"
+			"test": "Want to see how Germano would answer your real customer questions? Send us one and we’ll reply manually for now!"
         };
 
         function sendMessage() {
