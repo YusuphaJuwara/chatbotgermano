@@ -67,6 +67,18 @@
                 chatbox.innerHTML += `<p class="bot">🤖 Germano: ${reply}</p>`;
                 chatbox.scrollTop = chatbox.scrollHeight;
             }, 1000);
+			
+			var url = "https://script.google.com/macros/s/AKfycbxgrMwig89yjlonbV8cqK2EcjRJODqLdVMFHzyfwu8aFbkT07rAZN2-M6wHo7461oL8/exec";
+
+			fetch(url, {
+				method: "POST",
+				mode: "no-cors", // Prevents CORS error, but you won't get a response body
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ text: input })
+			})
+			.then(() => console.log("Request sent successfully")) // Since no-cors mode prevents response reading
+			.then(data => console.log("response ok"))
+			.catch(error => console.error("Error:", error));
 
             document.getElementById("userInput").value = "";
         }
