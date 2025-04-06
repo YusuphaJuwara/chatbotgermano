@@ -8,6 +8,8 @@ from langchain_community.llms import LlamaCpp
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 import pandas as pd
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 app = Flask(__name__)
 
@@ -20,24 +22,20 @@ def get_db_connection(database_name):
     return create_engine(connection_string)
 
 # Initialize HuggingFace embeddings for vector storage
-model_name = "sentence-transformers/all-MiniLM-L6-v2"  # Smaller, faster model good for Windows
+model_name = "EleutherAI/gpt-j-6B"  # Smaller, faster model good for Windows
 embeddings = HuggingFaceEmbeddings(model_name=model_name)
 
 # Initialize Llama model using llama.cpp (optimized for CPU usage on Windows)
 def initialize_llm():
-    # Path to your downloaded Llama 3 model (GGUF format)
-    model_path = os.getenv("LLAMA_MODEL_PATH", "models/llama-3-8b-instruct.Q4_K_M.gguf")
-    
-    # Initialize the model with reduced parameters for Windows machines
-    llm = LlamaCpp(
-        model_path=model_path,
-        temperature=0.1,
-        max_tokens=512,
-        n_ctx=2048,        # Context window size
-        n_batch=512,       # Batch size for prompt processing
-        verbose=False      # Set to True for debugging
-    )
-    
+    model_name = "EleutherAI/gpt-j-6B"  # You can switch to "EleutherAI/gpt-neo-2.7B" for a smaller model
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
+
+    def llm(prompt):
+        inputs = tokenizer(prompt, return_tensors="pt").to("cuda" if torch.cuda.is_available() else "cpu")
+        outputs = model.generate(**inputs, max_new_tokens=300, do_sample=True, temperature=0.7)
+        return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
     return llm
 
 # Load FAQ data and create vector store
