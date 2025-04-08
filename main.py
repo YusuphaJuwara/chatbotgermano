@@ -2,32 +2,30 @@ import os
 from flask import Flask, request, jsonify
 from sqlalchemy import create_engine, text
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains import ConversationalRetrievalChain
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import LlamaCpp
 from langchain.vectorstores import Chroma
-from langchain.memory import ConversationBufferMemory
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
+from sentence_transformers import SentenceTransformer
 
 app = Flask(__name__)
 
 # Database connection
 def get_db_connection(database_name):
-    server = os.getenv("SQL_SERVER", "HUAWEI-MIRKO")
-    username = os.getenv("SQL_USERNAME", "tarta")
-    password = os.getenv("SQL_PASSWORD", "")
-    connection_string = f"mssql+pyodbc://{username}:{password}@{server}/{database_name}?driver=ODBC+Driver+17+for+SQL+Server"
-    return create_engine(connection_string)
+    user = "root"
+    password = "admin"
+    host = "localhost"
+    port = 3306  # default MySQL port
+    return create_engine(f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database_name}")
 
 # Initialize HuggingFace embeddings for vector storage
-model_name = "EleutherAI/gpt-j-6B"  # Smaller, faster model good for Windows
-embeddings = HuggingFaceEmbeddings(model_name=model_name)
+model = SentenceTransformer('EleutherAI/gpt-neo-2.7B')
+embeddings = HuggingFaceEmbeddings(model_name='EleutherAI/gpt-neo-2.7B')
 
 # Initialize Llama model using llama.cpp (optimized for CPU usage on Windows)
 def initialize_llm():
-    model_name = "EleutherAI/gpt-j-6B"  # You can switch to "EleutherAI/gpt-neo-2.7B" for a smaller model
+    model_name = "EleutherAI/gpt-neo-2.7B"  # You can switch to "EleutherAI/gpt-neo-2.7B" for a smaller model
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32)
 
