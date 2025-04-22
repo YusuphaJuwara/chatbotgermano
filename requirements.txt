@@ -1,0 +1,13 @@
+# python version 3.13.3
+cohere
+hnswlib
+chromadb
+unstructured
+langchain
+python-dotenv
+numpy
+pandas
+mysql-connector-python
+sqlalchemy
+mysqlclient
+sqlparse

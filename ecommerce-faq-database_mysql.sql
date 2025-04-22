@@ -1,5 +1,5 @@
 -- Create database
-CREATE DATABASE ecommerce_faq;
+CREATE DATABASE IF NOT EXISTS ecommerce_faq;
 USE ecommerce_faq;
 
 -- Table: FAQ Categories
