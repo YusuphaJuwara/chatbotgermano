@@ -3,6 +3,11 @@ node_modules/
 
 # Ignore environment variables
 .env
+.venv
+
+# Ignore Database files
+*.sqlite3
+*.db
 
 # Ignore log files
 *.log
@@ -20,7 +25,7 @@ dist/
 build/
 
 # Ignore IDE/editor specific files
-.vscode/
+# .vscode/
 .idea/
 *.swp
 
@@ -34,3 +39,6 @@ coverage/
 # Ignore package-lock and yarn.lock if not needed
 package-lock.json
 yarn.lock
+
+# Ignore pycache files
+__pycache__/

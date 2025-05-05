@@ -1,0 +1,36 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: streamlit",
+      "type": "debugpy",
+      "request": "launch",
+      "program": ".\\.venv\\Scripts\\streamlit.exe", // "./.venv/bin/streamlit" on linux,
+      "args": [
+        "run",
+        "${file}" // "${file}" for the current file or specific file with relative path
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      // "envFile": "${workspaceFolder}\\.env" // Load environment variables from .env at project root
+    },
+    {
+      "name": "Python: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "${file}:app",
+        "--host", "localhost",
+        "--port", "${BACKEND_PORT}", 
+        "--reload"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}\\.env" // Load environment variables from .env at project root
+    }
+  ]
+}
