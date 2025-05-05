@@ -34,8 +34,7 @@ if not BACKEND_URL.startswith(("http://", "https://")):
     BACKEND_URL = "http://" + BACKEND_URL
 
 # For debugging: expose the URL in the query params using new API
-st.query_params.clear()  # Clear any previous query parameters
-st.query_params.update(debug_backend=BACKEND_URL)  # Update with the new backend URL
+st.query_params = {"debug_backend": BACKEND_URL}
 print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
 
 # Inject into utils so all api_... functions use this base
@@ -212,3 +211,13 @@ def display_citation_modal(modal: Modal):
             if docs:
                 for d in docs:
                     st.markdown(f"### {d.get('title')}")
+
+
+# -----------------------------------------------------------------------
+# Main App Execution
+# -----------------------------------------------------------------------
+modal = initialize_app()
+render_sidebar()
+render_header()
+render_chat_area()
+display_citation_modal(modal)
