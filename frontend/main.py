@@ -5,6 +5,20 @@ import streamlit.components.v1 as components
 from streamlit_modal import Modal
 
 # -----------------------------------------------------------------------
+# Page Configuration must come first
+# -----------------------------------------------------------------------
+st.set_page_config(
+    layout="centered",
+    page_title="Chat App",
+    page_icon="🤖",
+    menu_items={
+        'Get Help': 'https://www.example.com/help',
+        'Report a bug': 'https://www.example.com/bug',
+        'About': '# Streamlit Chat with FastAPI Backend!'
+    },
+)
+
+# -----------------------------------------------------------------------
 # Ensure a valid BACKEND_URL is set (never None)
 # -----------------------------------------------------------------------
 BACKEND_PORT = os.getenv("BACKEND_PORT", "8000")
@@ -19,8 +33,8 @@ else:
 if not BACKEND_URL.startswith(("http://", "https://")):
     BACKEND_URL = "http://" + BACKEND_URL
 
-# For debugging: expose the URL in the query params
-st.experimental_set_query_params(debug_backend=BACKEND_URL)
+# For debugging: expose the URL in the query params using new API
+st.set_query_params(debug_backend=BACKEND_URL)
 print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
 
 # Inject into utils so all api_... functions use this base
@@ -42,20 +56,6 @@ from utils import (
 )
 
 # -----------------------------------------------------------------------
-# Page Configuration
-# -----------------------------------------------------------------------
-st.set_page_config(
-    layout="centered",
-    page_title="Chat App",
-    page_icon="🤖",
-    menu_items={
-        'Get Help': 'https://www.example.com/help',
-        'Report a bug': 'https://www.example.com/bug',
-        'About': '# Streamlit Chat with FastAPI Backend!'
-    },
-)
-
-# -----------------------------------------------------------------------
 # Initialization
 # -----------------------------------------------------------------------
 def initialize_app():
@@ -73,7 +73,7 @@ def initialize_app():
         'messages': [],
         'show_citation_id': None,
         'documents_cache': {},
-        'user_profile': { 'name': 'User', 'avatar': '👤' }
+        'user_profile': {'name': 'User', 'avatar': '👤'}
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -144,10 +144,10 @@ def render_sidebar():
                             st.rerun()
 
 
-def render_chat_message(message: Dict, idx: int):
-    model = get_model_name_from_message(message) if message['role']=='assistant' else None
+def render_chat_message(message: dict, idx: int):
+    model = get_model_name_from_message(message) if message['role'] == 'assistant' else None
     with st.chat_message(message['role']):
-        content = message.get('content','')
+        content = message.get('content', '')
         cites = message.get('citations', [])
         out = format_text_with_citations(content, cites) if cites else content
         st.markdown(out, unsafe_allow_html=True)
@@ -159,13 +159,13 @@ def render_chat_message(message: Dict, idx: int):
                     if st.button(f"[{cid}]", key=f"cit_{cid}_{idx}"):
                         st.session_state.show_citation_id = cid
                         st.rerun()
-        ts = message.get('timestamp','')
+        ts = message.get('timestamp', '')
         if isinstance(ts, datetime.datetime):
             ts = ts.strftime("%Y-%m-%d %H:%M")
-        st.caption(" | ".join(filter(None,[ts, model or ''])))
+        st.caption(" | ".join(filter(None, [ts, model or ''])))
         link = message.get('link')
         if link and st.button("🔗 View Link", key=f"link_{idx}"):
-            components.html(f"<script>window.open('{link}','_blank')</script>", height=0,width=0)
+            components.html(f"<script>window.open('{link}','_blank')</script>", height=0, width=0)
 
 
 def render_chat_area():
@@ -184,11 +184,12 @@ def render_chat_area():
         if user_input:
             cid = st.session_state.current_chat_id
             with st.spinner("Sending..."):
-                res = api_create_message(cid,'user',user_input)
+                res = api_create_message(cid, 'user', user_input)
             if res:
                 with st.spinner("Refreshing..."):
                     msgs = api_get_messages(cid)
-                if msgs: st.session_state.messages = msgs
+                if msgs:
+                    st.session_state.messages = msgs
                 st.rerun()
             else:
                 st.error("Failed to send message.")
@@ -204,40 +205,10 @@ def display_citation_modal(modal: Modal):
             with st.spinner("Loading citation..."):
                 ids = api_get_citation(cid)
                 docs = api_get_docs(ids) if ids else None
-            if docs: st.session_state.documents_cache[cid] = docs
+            if docs:
+                st.session_state.documents_cache[cid] = docs
         with modal.container():
             if docs:
                 for d in docs:
                     st.markdown(f"### {d.get('title')}")
-                    st.markdown(f"> {d.get('text')}")
-            else:
-                st.warning("Citation not found.")
-            st.divider()
-            if st.button("Close", key=f"close_{cid}"):
-                st.session_state.show_citation_id = None
-                modal.close()
-                st.rerun()
 
-
-def add_custom_css():
-    st.markdown("""
-    <style>
-      .citation:hover { background-color: #7FB3D5; }
-      button[id^='cit_'] { opacity:0.7; font-size:0.8rem; }
-      button[id^='cit_']:hover { opacity:1; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------
-# Main Execution
-# -----------------------------------------------------------------------
-def main():
-    modal = initialize_app()
-    add_custom_css()
-    render_header()
-    render_sidebar()
-    render_chat_area()
-    display_citation_modal(modal)
-
-if __name__ == '__main__':
-    main()
