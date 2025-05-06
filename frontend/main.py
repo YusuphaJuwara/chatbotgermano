@@ -19,15 +19,14 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------
-# Ensure a valid BACKEND_URL is set (never None)
+# Determine backend URL from Streamlit secrets or fallback
 # -----------------------------------------------------------------------
-BACKEND_PORT = os.getenv("BACKEND_PORT", "8000")
-_raw_url = os.getenv("BACKEND_URL", "").strip()
+_raw_url = st.secrets.get("API_URL", "").strip()
 
 if _raw_url:
     BACKEND_URL = _raw_url
 else:
-    BACKEND_URL = f"http://localhost:{BACKEND_PORT}"
+    BACKEND_URL = "http://localhost:8000"
 
 # Guarantee scheme
 if not BACKEND_URL.startswith(("http://", "https://")):
@@ -211,7 +210,6 @@ def display_citation_modal(modal: Modal):
             if docs:
                 for d in docs:
                     st.markdown(f"### {d.get('title')}")
-
 
 # -----------------------------------------------------------------------
 # Main App Execution
