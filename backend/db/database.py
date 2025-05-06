@@ -36,18 +36,18 @@ class Message(Base):
     __tablename__ = "messages"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False, index=True)
-    role = Column(String, nullable=False) # 'user' or 'assistant'
+    role = Column(String(50), nullable=False)  # Specify length for VARCHAR
     content = Column(Text, nullable=False)
     timestamp = Column(TIMESTAMP, server_default=func.now())
-    ai_model = Column(String, nullable=True)
-    link = Column(String, nullable=True)
+    ai_model = Column(String(100), nullable=True)  # Optionally specify a length for this too
+    link = Column(String(255), nullable=True)  # Optionally specify a length for this too
 
 class Citation(Base):
     __tablename__ = "citations"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     msg_id = Column(Integer, ForeignKey("messages.id"), nullable=False, index=True)
     # List of document IDs associated with this citation
-    doc_ids = Column(String, nullable=False) # Store as comma-separated string
+    doc_ids = Column(String(255), nullable=False) # Store as comma-separated string
     start = Column(Integer, nullable=True) # Start index of the citation in the document text
     end = Column(Integer, nullable=True) # End index of the citation in the document text
     text = Column(Text, nullable=False)
