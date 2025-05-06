@@ -27,20 +27,19 @@ Base = declarative_base()
 
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
-    id = Column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))  # Specify length here
-    title = Column(String(255), nullable=False)  # Also set length for other String fields
+    id = Column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))  # UUID as string
+    title = Column(String(255), nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
-
 
 class Message(Base):
     __tablename__ = "messages"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False, index=True)
-    role = Column(String(50), nullable=False)  # Specify length for VARCHAR
+    session_id = Column(String(255), ForeignKey("chat_sessions.id"), nullable=False, index=True)  # UUID as string
+    role = Column(String(50), nullable=False)
     content = Column(Text, nullable=False)
     timestamp = Column(TIMESTAMP, server_default=func.now())
-    ai_model = Column(String(100), nullable=True)  # Optionally specify a length for this too
-    link = Column(String(255), nullable=True)  # Optionally specify a length for this too
+    ai_model = Column(String(100), nullable=True)
+    link = Column(String(255), nullable=True)
 
 class Citation(Base):
     __tablename__ = "citations"
