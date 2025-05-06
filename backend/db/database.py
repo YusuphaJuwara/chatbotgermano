@@ -27,9 +27,10 @@ Base = declarative_base()
 
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = Column(String, nullable=False)
+    id = Column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))  # Specify length here
+    title = Column(String(255), nullable=False)  # Also set length for other String fields
     created_at = Column(TIMESTAMP, server_default=func.now())
+
 
 class Message(Base):
     __tablename__ = "messages"
