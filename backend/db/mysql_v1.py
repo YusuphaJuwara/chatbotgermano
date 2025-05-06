@@ -39,9 +39,9 @@ class MYSQL:
         """Create a (new) database and initialize it."""
         
         if database_name == "ecommerce_faq":
-            sql_file_path = os.path.join(WORKING_DIR, "ecommerce-faq-database_mysql.sql")
+            sql_file_path = os.path.join(WORKING_DIR, '..', "ecommerce-faq-database_mysql.sql")
         elif database_name == "ecommerce_ticketing":
-            sql_file_path = os.path.join(WORKING_DIR, "ecommerce-ticket-database-sql_mysql.sql")
+            sql_file_path = os.path.join(WORKING_DIR, '..',"ecommerce-ticket-database-sql_mysql.sql")
         else:
             raise ValueError(f"Unknown database name: {database_name}. Use 'ecommerce_faq' or 'ecommerce_ticketing'.")
         
