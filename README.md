@@ -84,3 +84,13 @@ chatbot_project/
 
 - Nice [article](https://dev.to/kodebae/how-to-remove-a-leaked-env-file-from-github-permanently-3lei) to remove wrongly pushed files to github
 
+
+## To run
+- Backend:
+  - be in the project root `chatbotgermano`
+  - `PYTHONPATH=. uvicorn backend.main:app --reload --port 3003`
+  - However, if you already call the uvicorn.app(...) in the backend\main.py:
+    - `PYTHONPATH=. python backend/main.py`
+
+- Frontend:
+  - `PYTHONPATH=. streamlit run frontend/main.py --server.port 3005`
