@@ -8,6 +8,15 @@ import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_modal import Modal
 # import requests # Import requests for API calls
+st.set_page_config(layout="centered",
+                    page_title="Chat App",
+                    page_icon="🤖",
+                    menu_items={
+                                'Get Help': 'https://www.example.com/help', # Placeholder
+                                'Report a bug': "https://www.example.com/bug", # Placeholder
+                                'About': "# Streamlit Chat with FastAPI Backend!"
+                        },
+                    )
 # These imports must appear after setting the set_page_config bec it has to be 1st
 from utils import(
     handle_api_error,
@@ -93,16 +102,6 @@ def inject_custom_css():
     """, unsafe_allow_html=True)
 inject_custom_css()
 
-st.set_page_config(layout="centered",
-                    page_title="Chat App",
-                    page_icon="🤖",
-                    menu_items={
-                                'Get Help': 'https://www.example.com/help', # Placeholder
-                                'Report a bug': "https://www.example.com/bug", # Placeholder
-                                'About': "# Streamlit Chat with FastAPI Backend!"
-                        },
-                    )
-st.title("My Chatbot Interface")
 #BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
 #BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
 
