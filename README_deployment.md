@@ -64,5 +64,3 @@ Here’s a clean and short `README.md`-ready formatted version of your notes:
    ```
 
 ---
-
-Let me know if you want to add setup commands, `.env` example, or screenshots.
