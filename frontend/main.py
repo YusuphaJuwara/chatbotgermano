@@ -8,16 +8,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_modal import Modal
 # import requests # Import requests for API calls
-st.set_page_config(layout="centered",
-                    page_title="Chat App",
-                    page_icon="🤖",
-                    menu_items={
-                                'Get Help': 'https://www.example.com/help', # Placeholder
-                                'Report a bug': "https://www.example.com/bug", # Placeholder
-                                'About': "# Streamlit Chat with FastAPI Backend!"
-                        },
-                    )
-
 # These imports must appear after setting the set_page_config bec it has to be 1st
 from utils import(
     handle_api_error,
@@ -32,6 +22,87 @@ from utils import(
     extract_citations,
     format_text_with_citations
 )
+
+def inject_custom_css():
+    st.markdown("""
+        <style>
+        /* Global background */
+        .stApp {
+            background-color: #FFFFFF;
+            color: #1E293B;
+        }
+
+        /* Chat container */
+        .chat-container {
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        /* User message bubble */
+        .user-message {
+            background-color: #FFFFFF;
+            border: 1px solid #3B82F6;
+            color: #1E293B;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+        }
+
+        /* Assistant message bubble */
+        .assistant-message {
+            background-color: #D0E8FF;
+            color: #1E293B;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+        }
+
+        /* Buttons */
+        button[kind="primary"] {
+            background-color: #3B82F6 !important;
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+        }
+
+        button[kind="primary"]:hover {
+            background-color: #2563EB !important;
+        }
+
+        /* Citations */
+        .citation {
+            background-color: #EDF6FF;
+            color: #1E293B;
+            padding: 2px 6px;
+            border-radius: 5px;
+            border-bottom: 2px dashed #3B82F6;
+            cursor: pointer;
+        }
+
+        /* Scrollbars, optional */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #B3DAFF;
+            border-radius: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+inject_custom_css()
+
+st.set_page_config(layout="centered",
+                    page_title="Chat App",
+                    page_icon="🤖",
+                    menu_items={
+                                'Get Help': 'https://www.example.com/help', # Placeholder
+                                'Report a bug': "https://www.example.com/bug", # Placeholder
+                                'About': "# Streamlit Chat with FastAPI Backend!"
+                        },
+                    )
+st.title("My Chatbot Interface")
 #BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
 #BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
 

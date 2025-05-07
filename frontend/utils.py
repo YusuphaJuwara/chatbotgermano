@@ -17,8 +17,20 @@ from dotenv import load_dotenv
 load_dotenv('.env')
 
 # --- Configuration ---
-BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
-BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+_raw_url = st.secrets.get("API_URL", "").strip()
+
+if _raw_url:
+    BACKEND_URL = _raw_url
+else:
+    BACKEND_URL = "http://localhost:8000"
+
+# Guarantee scheme
+if not BACKEND_URL.startswith(("http://", "https://")):
+    BACKEND_URL = "http://" + BACKEND_URL
+
+# For debugging: expose the URL in the query params using new API
+st.query_params = {"debug_backend": BACKEND_URL}
+print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
 
 def handle_api_error(response: requests.Response, context: str) -> None:
     """This function handles the error response from the API responses and displays it in the Streamlit app.
