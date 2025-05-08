@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db.database import create_db_and_tables, populate_initial_citations
-from api import chat, citation # Import router objects
+from backend.db.database import create_db_and_tables #, populate_initial_citations
+from backend.api import chat, citation # Import router objects
 
 import os
 from dotenv import load_dotenv
@@ -14,7 +14,7 @@ load_dotenv(env_path)
 # Create DB tables on startup if they don't exist
 create_db_and_tables()
 # Populate initial citation data if needed
-populate_initial_citations()
+# populate_initial_citations()
 
 
 # Initialize FastAPI app

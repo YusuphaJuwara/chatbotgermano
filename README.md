@@ -86,11 +86,27 @@ chatbot_project/
 
 
 ## To run
-- Backend:
-  - be in the project root `chatbotgermano`
-  - `PYTHONPATH=. uvicorn backend.main:app --reload --port 3003`
-  - However, if you already call the uvicorn.app(...) in the backend\main.py:
-    - `PYTHONPATH=. python backend/main.py`
+- For Bash/Unix-based terminals:
+  - Backend:
+    - be in the project root `chatbotgermano`
+    - `PYTHONPATH=. uvicorn backend.main:app --reload --port 3003`
+    - However, if you already call the uvicorn.app(...) in the backend\main.py:
+      - `PYTHONPATH=. python backend/main.py`
+  - Frontend:
+    - `PYTHONPATH=. streamlit run frontend/main.py --server.port 3005`
 
-- Frontend:
-  - `PYTHONPATH=. streamlit run frontend/main.py --server.port 3005`
+- For Windows Powershell:
+  - Variable=value command doesn't work! SO, you need another way of setting the path.
+  - `$env:PYTHONPATH = "."` should set your PYTHONPATH correctly in your current PowerShell session. If you need this to be set every time you open a new PowerShell window, you would add $env:PYTHONPATH = "." to your PowerShell profile script.
+  - So, for backend:
+  ```bash
+  $env:PYTHONPATH = "."
+  uvicorn backend.main:app --reload --port 3003
+  ```
+  - For frontend:
+  ```bash
+  $env:PYTHONPATH = "."
+  streamlit run frontend/main.py --server.port 3005
+  ```
+
+
