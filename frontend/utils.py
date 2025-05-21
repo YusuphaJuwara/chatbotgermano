@@ -218,27 +218,34 @@ def extract_citations(text):
     return {citation_id: content for citation_id, content in matches}
 
 def format_text_with_citations(text: str, citations: List[dict]) -> str:
-    """Highlights with HTML the part of the assistant response where that was cited. 
-    
+    """Highlights with HTML the part of the assistant response where that was cited.
+
     Args:
         text (str): The text to format.
         citations (List[dict]): A list of citation dictionaries, each containing 'id', 'text', 'start', and 'end', etc.
-        
+
     Returns:
         str: The formatted text with citations replaced by HTML spans.
     """
-    # for each citation, get the start and end ints, then replace the text with a span
+    # Sort citations by their start index in descending order
+    # This is crucial to avoid issues with shifting indices when replacing
+    citations.sort(key=lambda c: c['start'], reverse=True)
+
     for citation in citations:
         citation_id = citation['id']
-        cited_text = citation['text']
         start = citation['start']
         end = citation['end']
+        
+        # Extract the exact text from the original 'text' string based on start and end
+        # This ensures we're replacing the correct part of the original string
+        original_cited_text = text[start:end]
 
         # Create a span with the citation ID and text
-        span_html = f'<span class="citation" data-citation-id="{citation_id}" style="background-color: #ADD8E6; color: black; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #007bff; cursor: pointer;">{escape(cited_text)}[{citation_id}]</span>'
+        span_html = f'<span class="citation" data-citation-id="{citation_id}" style="background-color: #ADD8E6; color: black; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #007bff; cursor: pointer;">{escape(original_cited_text)}[{citation_id}]</span>'
 
-        # Replace the original text with the span in the content
-        text = text.replace(cited_text[start:end], span_html, 1)
+        # Reconstruct the string by inserting the span at the correct position
+        text = text[:start] + span_html + text[end:]
+        
     return text
     
 def format_text_with_citations2(text):

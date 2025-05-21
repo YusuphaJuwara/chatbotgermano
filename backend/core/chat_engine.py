@@ -43,7 +43,7 @@ Your primary function is to answer user queries accurately and concisely.
 
 **Response Protocol:**
 * **If the answer is found in the provided context:** Respond with citations grounded in the context.
-* **If the answer is NOT found in the provided context (or context is empty):** **You must first clearly state that your answer is NOT grounded in the provided documents**. Then, provide an answer based on your general knowledge if possible.
+* **If the answer is NOT found in the provided context (or context is empty):** **You must first clearly state that your answer is NOT grounded in the provided documents/context**. Then, provide an answer based on your general knowledge if possible.
 * **If you cannot answer the question** (even with general knowledge), or if the question is unclear or inappropriate: Politely state that you cannot answer based on the available information or ask the user to rephrase.
 
 **Output Format:**
@@ -104,6 +104,8 @@ You are an AI assistant specialized in analyzing user requests and generating op
         for query in response.search_queries:
             search_queries.append(query.text)
             
+        # If there are no search queries by the cohere endpoint, 
+        # The model is going to generate a search query-like answer in the response.text field
         if not search_queries:
             search_queries = response.text.split("\n")
             search_queries = [query.strip() for query in search_queries if query.strip()]  # Clean up the queries
