@@ -1,4 +1,4 @@
-# main.py
+# main2.py
 import datetime
 import os
 # import re
@@ -37,6 +37,65 @@ from utils import(
 # --- Configuration ---
 BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
 BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+
+def calculate_text_height(text: str, font_size: int, line_height_multiplier: float, max_height: int) -> int:
+    """
+    Calculates the estimated height of the text in a container based on font size, line height, and maximum height.
+
+    Args:
+        text (str): The text whose height we want to estimate.
+        font_size (int): The font size in pixels.
+        line_height_multiplier (float): The multiplier for line height based on the font size (e.g., 1.6).
+        max_height (int): The maximum height of the chat container (in pixels).
+        max_chars_per_line (int): The maximum number of characters per line.
+
+    Returns:
+        int: The estimated height of the text in pixels, adjusted to not exceed the maximum height.
+    """
+    # Calculate number of characters
+    num_chars = len(text)
+    # Calculate number of line breaks (newlines)
+    num_breaks = text.count('\n')
+    max_chars_per_line = 65  # Assuming an average of 50 characters per line
+
+    # Calculate number of lines based on text length and max characters per line
+    num_lines = (num_chars / (line_height_multiplier*max_chars_per_line)) + (num_breaks*line_height_multiplier if num_breaks > 0 else 0)
+
+    # Estimate the total height required for the text
+    total_height = round(num_lines * font_size * (line_height_multiplier if num_breaks> 0 else 1))
+    #st.info(f"Text Height: {total_height} px (Font Size: {font_size}px, Line Height: {line_height_multiplier}, Max Height: {max_height}px, {num_chars} chars)")
+    return min(total_height, max_height)
+
+# Include JavaScript
+def render_text_with_citations(text: str):
+    # Display markdown with HTML content
+    
+    # Inject JavaScript to handle the click event on citation spans
+    components.html(f"""
+    <div style = "color: #0F172A; letter-spacing: 0.01em;line-height: 1.6;font-family: sans-serif;font-size: 14px;font-weight: 400;margin: 0 0 16px 0;padding: 0;word-break: break-word;">{text}</div>
+    <script>
+        window.onload = function() {{
+            const spans = document.querySelectorAll('span[data-citation-id]');
+            spans.forEach(span => {{
+                span.addEventListener('click', () => {{
+                    const citationId = span.getAttribute('data-citation-id');
+                    
+                    const lol = `[class*="trigger-button-${{citationId}}"]`;
+                    
+                    const hiddenInput = window.parent.document.querySelector(lol);
+                    
+                    const button = hiddenInput.querySelector('button');
+                    if (button) {{
+                        button.click();
+                    }}
+                    
+                }});
+            }});
+            
+        }};
+    </script>
+    """, height=calculate_text_height(text, 14, 1.6, 350), scrolling=True)
+
 
 """# Streamlit App """
 
@@ -174,8 +233,13 @@ def render_chat_message(message: Dict, index: int) -> None:
         citations = message.get("citations", [])
         formatted_content = format_text_with_citations(content, citations) if citations else content
 
+        if citations:
+            text = formatted_content
+            render_text_with_citations(text)
+        else:
+            st.markdown(formatted_content)
         # Use markdown with unsafe_allow_html=True for the clickable citation spans
-        st.markdown(formatted_content, unsafe_allow_html=True)
+        # st.markdown(formatted_content, unsafe_allow_html=True)
 
         # Render invisible buttons for citations present in *this specific message*
         if citations:
@@ -216,12 +280,12 @@ def render_chat_message(message: Dict, index: int) -> None:
         st.caption(" | ".join(filter(None, caption_parts)))
 
         # Display optional link button
-        link_url = message.get("link")
-        if link_url:
-             link_key = f"view_link_{st.session_state.current_chat_id}_{index}"
-             if st.button("🔗 View Link", key=link_key, help=f"Open {link_url}"):
-                  # Open link in new tab
-                  components.html(f"<script>window.open('{link_url}', '_blank');</script>", height=0, width=0)
+        # link_url = message.get("link")
+        # if link_url:
+        #      link_key = f"view_link_{st.session_state.current_chat_id}_{index}"
+        #      if st.button("🔗 View Link", key=link_key, help=f"Open {link_url}"):
+        #           # Open link in new tab
+        #           components.html(f"<script>window.open('{link_url}', '_blank');</script>", height=0, width=0)
 
 
 def render_chat_area() -> None:

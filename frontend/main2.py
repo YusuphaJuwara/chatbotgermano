@@ -1,14 +1,11 @@
-# main.py
 import datetime
-import os
-# import re
-from typing import List, Dict, Optional, Any, Literal
-# import uuid
-# from html import escape
+# import markdown
 import streamlit as st
-import streamlit.components.v1 as components
-from streamlit_modal import Modal
-# import requests # Import requests for API calls
+from typing import List, Dict, Optional, Any, Literal
+import streamlit.components.v1 as components, html
+from modal import Modal
+import math
+
 st.set_page_config(layout="centered",
                     page_title="Chatbot Germano",
                     page_icon="🤖",
@@ -19,8 +16,66 @@ st.set_page_config(layout="centered",
                         },
                     )
 
+def calculate_text_height(text: str, font_size: int, line_height_multiplier: float, max_height: int) -> int:
+    """
+    Calculates the estimated height of the text in a container based on font size, line height, and maximum height.
+
+    Args:
+        text (str): The text whose height we want to estimate.
+        font_size (int): The font size in pixels.
+        line_height_multiplier (float): The multiplier for line height based on the font size (e.g., 1.6).
+        max_height (int): The maximum height of the chat container (in pixels).
+        max_chars_per_line (int): The maximum number of characters per line.
+
+    Returns:
+        int: The estimated height of the text in pixels, adjusted to not exceed the maximum height.
+    """
+    # Calculate number of characters
+    num_chars = len(text)
+    # Calculate number of line breaks (newlines)
+    num_breaks = text.count('\n')
+    max_chars_per_line = 65  # Assuming an average of 50 characters per line
+
+    # Calculate number of lines based on text length and max characters per line
+    num_lines = (num_chars / (line_height_multiplier*max_chars_per_line)) + (num_breaks*line_height_multiplier if num_breaks > 0 else 0)
+
+    # Estimate the total height required for the text
+    total_height = round(num_lines * font_size * (line_height_multiplier if num_breaks> 0 else 1))
+    #st.info(f"Text Height: {total_height} px (Font Size: {font_size}px, Line Height: {line_height_multiplier}, Max Height: {max_height}px, {num_chars} chars)")
+    return min(total_height, max_height)
+
+# Include JavaScript
+def render_text_with_citations(text: str):
+    # Display markdown with HTML content
+    
+    # Inject JavaScript to handle the click event on citation spans
+    components.html(f"""
+    <div style = "color: #0F172A; letter-spacing: 0.01em;line-height: 1.6;font-family: sans-serif;font-size: 14px;font-weight: 400;margin: 0 0 16px 0;padding: 0;word-break: break-word;">{text}</div>
+    <script>
+        window.onload = function() {{
+            const spans = document.querySelectorAll('span[data-citation-id]');
+            spans.forEach(span => {{
+                span.addEventListener('click', () => {{
+                    const citationId = span.getAttribute('data-citation-id');
+                    
+                    const lol = `[class*="trigger-button-${{citationId}}"]`;
+                    
+                    const hiddenInput = window.parent.document.querySelector(lol);
+                    
+                    const button = hiddenInput.querySelector('button');
+                    if (button) {{
+                        button.click();
+                    }}
+                    
+                }});
+            }});
+            
+        }};
+    </script>
+    """, height=calculate_text_height(text, 14, 1.6, 350), scrolling=True)
+
 # These imports must appear after setting the set_page_config bec it has to be 1st
-from utils import(
+from utils2 import(
     handle_api_error,
     api_get_sessions,
     api_create_session,
@@ -34,11 +89,40 @@ from utils import(
     format_text_with_citations
 )
 
-# --- Configuration ---
-BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
-BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+def load_css(file_path):
+    with open(file_path, "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-"""# Streamlit App """
+# --- Streamlit Modal Setup ---
+# Define Modal instance (can be defined once globally or here)
+modal = Modal(
+    title="Citation Details", # Set a relevant title
+    key="citation-modal"
+)
+
+# --- Configuration ---
+# _raw_url = st.secrets.get("API_URL", "").strip()
+# #_raw_url = "http://16.170.40.83:8000"
+
+# if _raw_url:
+#     BACKEND_URL = _raw_url
+# else:
+#     BACKEND_URL = "http://localhost:8000"
+
+# # Guarantee scheme
+# if not BACKEND_URL.startswith(("http://", "https://")):
+#     BACKEND_URL = "http://" + BACKEND_URL
+
+# # For debugging: expose the URL in the query params using new API
+# st.query_params = {"debug_backend": BACKEND_URL}
+# print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
+
+# Inject into utils so all api_... functions use this base
+# import utils
+# utils_test.BACKEND_URL = BACKEND_URL
+
+"""# Chatbot Germano """
 
 def initialize_app():
     """Initialize app configuration and session state variables.
@@ -47,16 +131,6 @@ def initialize_app():
     Returns:
         Modal instance for displaying citation details.
     """
-    # st.set_page_config(layout="centered",
-    #                 page_title="Chat App",
-    #                 page_icon="🤖",
-    #                 menu_items={
-    #                             'Get Help': 'https://www.example.com/help', # Placeholder
-    #                             'Report a bug': "https://www.example.com/bug", # Placeholder
-    #                             'About': "# Streamlit Chat with FastAPI Backend!"
-    #                     },
-    #                 )
-
     # Initialize session state variables if they don't exist
     if "user_profile" not in st.session_state:
         st.session_state.user_profile = {"name": "User", "avatar": "👤"}
@@ -81,22 +155,18 @@ def initialize_app():
     # Cache for fetched citation details {citation_id: citation_data}
     if "documents_cache" not in st.session_state:
         st.session_state.documents_cache = {}
-
-    # Define Modal instance (can be defined once globally or here)
-    modal = Modal(
-        title="Citation Details", # Set a relevant title
-        key="citation-modal", # Unique key
-        padding=20,
-        max_width=700
-    )
-    return modal
+        
+    #display_citation_modal()
 
 
 # --- UI Rendering Functions ---
+# def render_text_with_buttons() -> None:
+#     # Render the citation as a button
+#     st.session_state.show_citation_id = citation_id
 
 def render_header() -> None:
     """Render the app header."""
-    st.header(":blue[Chatbot Germano] :recycle:", divider=True)
+    st.header(":blue[Chat with Germano]", divider=True)
 
 def render_sidebar() -> None:
     """Render the sidebar with chat sessions."""
@@ -112,19 +182,7 @@ def render_sidebar() -> None:
                   st.toast(f"User profile clicked (placeholder)")
         with col_new_chat:
              if st.button("➕", key="new_chat_btn", help="Start a new chat"):
-                 # Call API to create session
-                 with st.spinner("Creating new chat..."):
-                     new_session = api_create_session()
-                 if new_session:
-                     st.session_state.chat_sessions[new_session['id']] = new_session
-                     st.session_state.current_chat_id = new_session['id']
-                     st.session_state.messages = [] # Clear messages for new chat
-                     st.session_state.show_citation_id = None # Reset modal state
-                     st.session_state.documents_cache = {} # Clear citation cache
-                     st.toast(f"Created '{new_session['title']}'")
-                     st.rerun()
-                 else:
-                     st.error("Failed to create new chat session on backend.")
+                create_new_chat()
 
         st.divider()
 
@@ -172,11 +230,12 @@ def render_chat_message(message: Dict, index: int) -> None:
         # citations = extract_citations(content)
         # formatted_content = format_text_with_citations(content)
         citations = message.get("citations", [])
-        formatted_content = format_text_with_citations(content, citations) if citations else content
-
-        # Use markdown with unsafe_allow_html=True for the clickable citation spans
-        st.markdown(formatted_content, unsafe_allow_html=True)
-
+        formatted_content = format_text_with_citations(content, citations) if citations else st.markdown(content)
+        
+        if citations:
+            text = formatted_content
+            render_text_with_citations(text)
+        
         # Render invisible buttons for citations present in *this specific message*
         if citations:
             # Use columns to lay out buttons less intrusively if many citations
@@ -185,13 +244,16 @@ def render_chat_message(message: Dict, index: int) -> None:
             for idx, citation in enumerate(citations):
                 with cols[idx]:
                     citation_id = citation['id']
+                    
                     # Unique button key combining message index and citation id/index
-                    button_key = f"trigger-button-{citation_id}-{index}-{idx}"
-                    if st.button(f"[{citation_id}]", key=button_key, help=f"View details for '{citation['text']}'"):
+                    button_key = f"trigger-button-{citation_id}"
+                    if st.button(f"[{citation_id}]", key=button_key, help=f"View details for '{citation['text']}'", 
+                                 use_container_width=False, type="secondary"):
                         st.session_state.show_citation_id = citation_id
                         # No rerun here, display_citation_modal logic handles opening
                         # Need to trigger a rerun *after* state is set if modal check is later
                         st.rerun() # Rerun needed to make modal check happen
+        
 
         # Display timestamp and model info (if assistant)
         timestamp_str = message.get('timestamp', '')
@@ -226,7 +288,11 @@ def render_chat_message(message: Dict, index: int) -> None:
 
 def render_chat_area() -> None:
     """Render the main chat area including messages and input."""
-    chat_container = st.container(height=500, border=False) # Adjust height as needed
+    chat_container = st.container(
+                            height=470, # Set a fixed height for the chat area
+                            border=False,
+                            key="chat_container"  # Add this for better CSS targeting
+    )
 
     # Display existing messages for the current chat
     with chat_container:
@@ -237,7 +303,15 @@ def render_chat_area() -> None:
             for i, message in enumerate(st.session_state.messages):
                 render_chat_message(message, i)
         else:
-            st.info("Select a chat from the sidebar or start a new one using ➕.")
+            # Text-styled button that shares the create_new_chat function
+            st.button(
+                   "Select a chat from the sidebar or start a new one using  ➕",
+                    key="text_chat_trigger",  # This key is used in the CSS selector
+                    on_click=create_new_chat,
+                    help="Start a new chat",
+                    type="primary"
+            )
+    
 
     # Separator and Chat input - Place outside the message container
     if st.session_state.current_chat_id:
@@ -265,14 +339,27 @@ def render_chat_area() -> None:
             else:
                  st.error("Failed to send message.") # API call already showed error
 
+def create_new_chat():
+    """Shared function for new chat creation"""
+    with st.spinner("Creating new chat..."):
+        new_session = api_create_session()
+    if new_session:
+        st.session_state.chat_sessions[new_session['id']] = new_session
+        st.session_state.current_chat_id = new_session['id']
+        st.session_state.messages = []
+        st.session_state.show_citation_id = None
+        st.session_state.documents_cache = {}
+        st.toast(f"Created '{new_session['title']}'")
+        #st.rerun()
 
-def display_citation_modal(modal_instance: Modal) -> None:
+
+def display_citation_modal() -> None:
     """Displays the modal with citation details if show_citation_id is set."""
     # Check if we need to open the modal based on the state variable
-    if st.session_state.show_citation_id and not modal_instance.is_open():
-         modal_instance.open()
+    if st.session_state.show_citation_id and not modal.is_open():
+        modal.open()
 
-    if modal_instance.is_open() and st.session_state.show_citation_id:
+    if modal.is_open() and st.session_state.show_citation_id:
         citation_id = st.session_state.show_citation_id
         docs = None
 
@@ -290,7 +377,7 @@ def display_citation_modal(modal_instance: Modal) -> None:
                 st.session_state.documents_cache[citation_id] = docs # Store in cache
             print(f"2. display_citation_modal -> docs: {docs}")
 
-        with modal_instance.container():
+        with modal.container():
             if docs:
                 for doc in docs:
                     st.markdown(f"### {doc.get('title', 'Citation Detail')}")
@@ -306,52 +393,17 @@ def display_citation_modal(modal_instance: Modal) -> None:
             # Button to close the modal AND reset the state variable
             if st.button("Close Citation", key=f"close_citation_{citation_id}"):
                 st.session_state.show_citation_id = None
-                modal_instance.close()
+                modal.close()
                 st.rerun() # Rerun to reflect closed state
-
-def add_custom_css() -> None:
-    """Add custom CSS for styling."""
-    st.markdown("""
-    <style>
-        /* Style for the clickable citation span */
-        .citation {
-            transition: background-color 0.3s;
-        }
-        .citation:hover {
-            background-color: #7FB3D5 !important; /* A slightly darker blue on hover */
-        }
-        /* Try to hide or minimize the trigger buttons */
-         button[id^='trigger-button-'] {
-             /* visibility: hidden; */ /* Option 1: Hide but keep layout space */
-             /* display: none; */ /* Option 2: Remove completely (might affect layout) */
-             /* Option 3: Style minimally */
-             padding: 0.1rem 0.2rem;
-             font-size: 0.65rem;
-             margin-left: 3px;
-             border: 1px solid #eee;
-             background-color: #f8f9fa;
-             line-height: 1;
-             opacity: 0.7; /* Make less prominent */
-             cursor: default; /* Suggest it's not primary interaction */
-         }
-         button[id^='trigger-button-']:hover {
-             opacity: 1;
-             background-color: #e9ecef;
-         }
-    </style>
-    """, unsafe_allow_html=True)
-
 
 # --- Main Application Execution ---
 def main() -> None:
     """The main function to run the Streamlit app.
     """
-    # Initialize app (sets config, state vars, fetches initial sessions)
-    # The modal instance is returned and needed for display logic
-    modal_instance = initialize_app()
-
     # Add custom CSS
-    add_custom_css()
+    load_css("frontend/styles.css")
+    # Initialize app (sets config, state vars, fetches initial sessions)
+    initialize_app()
 
     # Render UI components
     render_header()
@@ -359,7 +411,7 @@ def main() -> None:
     render_chat_area()
 
     # Handle Citation Modal Display (check state and render if needed)
-    display_citation_modal(modal_instance)
+    display_citation_modal()
 
 if __name__ == "__main__":
     main()

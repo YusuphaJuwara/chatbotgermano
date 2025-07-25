@@ -1,9 +1,9 @@
-# utils.py
 """# --- API Client Functions ---"""
 
 import os
 import datetime
 import re
+# import markdown
 from typing import List
 # import uuid
 from html import escape
@@ -18,8 +18,22 @@ from dotenv import load_dotenv
 load_dotenv('.env')
 
 # --- Configuration ---
-BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
-BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+# _raw_url = st.secrets.get("API_URL", "").strip()
+# #_raw_url = "http://13.53.108.0:8000"
+
+# if _raw_url:
+#     BACKEND_URL = _raw_url
+# else:
+#     BACKEND_URL = "http://localhost:8000"
+
+# # Guarantee scheme
+# if not BACKEND_URL.startswith(("http://", "https://")):
+#     BACKEND_URL = "http://" + BACKEND_URL
+
+# # For debugging: expose the URL in the query params using new API
+# st.query_params = {"debug_backend": BACKEND_URL}
+BACKEND_URL = "http://localhost:3003"
+print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
 
 def handle_api_error(response: requests.Response, context: str) -> None:
     """This function handles the error response from the API responses and displays it in the Streamlit app.
@@ -218,36 +232,69 @@ def extract_citations(text):
     # Return dict {citation_id: content}
     return {citation_id: content for citation_id, content in matches}
 
-def format_text_with_citations(text: str, citations: List[dict]) -> str:
-    """Highlights with HTML the part of the assistant response where that was cited.
+import re
 
+def escape_markdown(text: str):
+    """Escape Markdown formatting but keep bullet points and breaks."""
+    # Remove bold, italics, and other formatting
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Remove bold (e.g., **bold**)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)      # Remove italic (e.g., *italic*)
+    text = re.sub(r'_(.*?)_', r'\1', text)        # Remove italic (e.g., _italic_)
+    
+    # Remove links (e.g., [link](http://example.com))
+    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
+    
+    # Remove headers (e.g., # Heading, ## Subheading, etc.)
+    text = re.sub(r'^[#]+\s?', '', text, flags=re.MULTILINE)
+    
+    # Replace multiple line breaks with a single line break
+    text = re.sub(r'\n+', '\n', text)  # Normalize multiple line breaks
+    
+    return text
+
+
+
+def format_text_with_citations(text: str, citations: List[dict]) -> str:
+    """Highlights with HTML the part of the assistant response where that was cited. 
+    
     Args:
         text (str): The text to format.
         citations (List[dict]): A list of citation dictionaries, each containing 'id', 'text', 'start', and 'end', etc.
-
+        
     Returns:
         str: The formatted text with citations replaced by HTML spans.
     """
-    # Sort citations by their start index in descending order
-    # This is crucial to avoid issues with shifting indices when replacing
-    citations.sort(key=lambda c: c['start'], reverse=True)
-
+     # Sort citations by descending start index to not mess up positions while replacing
+    citations = sorted(citations, key=lambda c: c['start'], reverse=True)
+    txt = escape_markdown(text)
+    # for each citation, get the start and end ints, then replace the text with a span
     for citation in citations:
         citation_id = citation['id']
         start = citation['start']
         end = citation['end']
         
-        # Extract the exact text from the original 'text' string based on start and end
-        # This ensures we're replacing the correct part of the original string
-        original_cited_text = text[start:end]
-
-        # Create a span with the citation ID and text
-        span_html = f'<span class="citation" data-citation-id="{citation_id}" style="background-color: #ADD8E6; color: black; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #007bff; cursor: pointer;">{escape(original_cited_text)}[{citation_id}]</span>'
-
-        # Reconstruct the string by inserting the span at the correct position
-        text = text[:start] + span_html + text[end:]
+        cited_text = citation['text']
         
-    return text
+        # Create a span with the citation ID and text
+        #span_html = f'<span class="citation" data-citation-id="{citation_id}"  style="background-color: #ADD8E6; color: black; padding: 2px 4px; border-radius: 3px; border-bottom: 2px dashed #007bff; cursor: pointer;">{cited_text}[{citation_id}]</span>'
+
+        span_html = (
+            f'<span class="citation" data-citation-id="{citation_id}" '
+            f'style="font-size: 14px; background-color: #cbf2ff57; color: #1E293B; padding: 2px 4px; '
+            f'border-radius: 3px; border-bottom: 2px dashed #007bff; cursor: pointer;">'
+            f'{(cited_text)}[{citation_id}]</span>'
+        )
+        
+        # Replace the original text with the span in the content
+        # txt = txt[:start] + span_html + txt[end:]
+        txt = txt.replace(cited_text, span_html, 1)
+        
+    # Process bullet points: turn `* **` into actual <ul> and <li> elements
+    txt = re.sub(r'^\*\s\*\*(.*?)\*\*', r'<ul><li>\1</li></ul>', txt, flags=re.MULTILINE)
+    # Process bullet points: convert `*` into actual <ul> and <li> HTML elements
+    txt = re.sub(r'^\*\s+(.*)', r'<ul><li>\1</li></ul>', txt, flags=re.MULTILINE)
+
+    return (txt)
     
 def format_text_with_citations2(text):
     """TODO: Remove
@@ -261,7 +308,16 @@ def format_text_with_citations2(text):
 
         # The visible span - onclick triggers button associated with this specific citation instance
         # The actual button ID will be dynamically created where this is used.
+        style_block = """
+            <style>
+                .citation:hover {
+                    color: #3B82F6 !important; /* new color on hover */
+                }
+            </style>
+            """
+
         span_html = f'''
+             {style_block}
             <span
                 class="citation"
                 data-citation-id="{citation_id}"
