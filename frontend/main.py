@@ -18,7 +18,6 @@ st.set_page_config(layout="centered",
                                 'About': "# Streamlit Chat with FastAPI Backend!"
                         },
                     )
-
 # These imports must appear after setting the set_page_config bec it has to be 1st
 from utils import(
     handle_api_error,
@@ -34,9 +33,98 @@ from utils import(
     format_text_with_citations
 )
 
+def inject_custom_css():
+    st.markdown("""
+        <style>
+        /* Global background */
+        .stApp {
+            background-color: #FFFFFF;
+            color: #1E293B;
+        }
+
+        /* Chat container */
+        .chat-container {
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        /* User message bubble */
+        .user-message {
+            background-color: #FFFFFF;
+            border: 1px solid #3B82F6;
+            color: #1E293B;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+        }
+
+        /* Assistant message bubble */
+        .assistant-message {
+            background-color: #D0E8FF;
+            color: #1E293B;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+        }
+
+        /* Buttons */
+        button[kind="primary"] {
+            background-color: #3B82F6 !important;
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+        }
+
+        button[kind="primary"]:hover {
+            background-color: #2563EB !important;
+        }
+
+        /* Citations */
+        .citation {
+            background-color: #EDF6FF;
+            color: #1E293B;
+            padding: 2px 6px;
+            border-radius: 5px;
+            border-bottom: 2px dashed #3B82F6;
+            cursor: pointer;
+        }
+
+        /* Scrollbars, optional */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #B3DAFF;
+            border-radius: 10px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+inject_custom_css()
+
+#BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
+#BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+
 # --- Configuration ---
-BACKEND_PORT = os.getenv("BACKEND_PORT") # Port for the backend API (default: 8000)
-BACKEND_URL = os.getenv("BACKEND_URL") #"http://localhost:8000" # Or http://127.0.0.1:8000
+_raw_url = st.secrets.get("API_URL", "").strip()
+
+if _raw_url:
+    BACKEND_URL = _raw_url
+else:
+    BACKEND_URL = "http://localhost:8000"
+
+# Guarantee scheme
+if not BACKEND_URL.startswith(("http://", "https://")):
+    BACKEND_URL = "http://" + BACKEND_URL
+
+# For debugging: expose the URL in the query params using new API
+st.query_params = {"debug_backend": BACKEND_URL}
+print(f"▶️ Using BACKEND_URL = {BACKEND_URL}")
+
+# Inject into utils so all api_... functions use this base
+import utils
+utils.BACKEND_URL = BACKEND_URL
 
 """# Streamlit App """
 
